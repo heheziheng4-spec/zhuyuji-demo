@@ -52,6 +52,7 @@ canvas{display:block}
 #dialogue{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(20,16,11,.97),rgba(20,16,11,.8));border-top:1px solid var(--line);padding:20px 6% 24px}
 #dialogue .who{color:var(--gold2);font-size:15px;letter-spacing:2px;margin-bottom:8px}
 #dialogue .text{font-size:15px;line-height:1.9;min-height:54px}
+#dialogue .reply{font-size:13px;line-height:1.7;color:var(--jade2);margin-top:8px;padding-left:12px;border-left:2px solid var(--jade)}
 #dialogue .opts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 #dialogue .opt{border:1px solid var(--line);background:rgba(217,179,106,.08);color:var(--paper);border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;transition:.15s}
 #dialogue .opt:hover{background:var(--gold);color:var(--ink)}
@@ -99,7 +100,7 @@ canvas{display:block}
   <div class="en">J A D E &nbsp; H U N T E R</div>
   <p class="desc">洪水将临，<b>以玉通神，守此良渚。</b><br>你是良渚之王，在滔天大水到来之前，率领先民完成最后的祭祀。</p>
   <button class="btn go" id="btnStart">启 行 新 局</button>
-  <div class="tip">WASD 行走 · Shift 疾行 · 空格 跳跃 · 鼠标拖拽环视<br>靠近人物按 E 对话 · 集齐玉石后前往西外环讨伐岩石巨怪</div>
+  <div class="tip">WASD 行走 · Shift 疾行 · 空格 跳跃 · 鼠标拖拽环视<br>靠近人物按 E 对话（8 位角色 · 多轮对话 · 好感度羁绊）<br>N 观星北斗 · B 玉琮共鸣 · 集齐五玉后前往西外环讨伐岩石巨怪</div>
 </div>
 
 <div id="hud" class="layer hidden">
@@ -108,7 +109,8 @@ canvas{display:block}
     <div class="panel" id="res"><div class="lbl">王城物资</div><div class="row"><span>玉<b id="rJade">0</b></span><span>粮<b id="rFood">20</b></span><span>材<b id="rMat">10</b></span><span>人<b id="rPop">12</b></span></div></div>
   </div>
   <div id="season" class="panel" style="padding:8px 18px"><div class="day">第 1 日 · 晨</div><div class="bar"><i></i></div></div>
-  <div id="hint">WASD 移动　Shift 疾行　空格 跳跃　E 互动　M 地图　H 隐藏界面</div>
+  <div id="aff" style="position:absolute;top:74px;right:18px;font-size:11px;color:var(--jade2);text-align:right"></div>
+  <div id="hint">WASD 移动　Shift 疾行　空格 跳跃　E 互动　N 观星　B 玉琮共鸣　M 地图　H 隐藏界面</div>
   <div id="prompt" class="hidden">按 E 互动</div>
   <div id="toast"></div>
 </div>
@@ -116,8 +118,9 @@ canvas{display:block}
 <div id="dialogue" class="layer hidden">
   <div class="who" id="dWho">长者</div>
   <div class="text" id="dText"></div>
+  <div class="reply" id="dReply" style="display:none"></div>
   <div class="opts" id="dOpts"></div>
-  <div class="cont">按 1-4 选择 · Esc 离开</div>
+  <div class="cont">按 1-4 选择 · Esc 离开 · 对话影响好感度与羁绊</div>
 </div>
 
 <div id="battle" class="layer hidden">
