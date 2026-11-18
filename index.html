@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>逐玉记 · 良渚传奇</title>
+<style>
+:root{
+  --ink:#241d15;--ink2:#2f261b;--paper:#efe6d2;--gold:#d9b36a;--gold2:#f0d79a;
+  --jade:#8fb9a6;--jade2:#bcd8c9;--muted:#9a8a6d;--danger:#c96a52;--line:rgba(217,179,106,.3);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);font-family:"Microsoft YaHei","PingFang SC",sans-serif;color:var(--paper);user-select:none;-webkit-user-select:none}
+canvas{display:block}
+#game{position:absolute;inset:0}
+.layer{position:absolute;inset:0;pointer-events:none}
+.layer>*{pointer-events:auto}
+.hidden{display:none!important}
+
+/* 开始界面 */
+#start{background:radial-gradient(ellipse at 50% 40%,rgba(47,38,27,.55),rgba(20,16,11,.92)),url('assets/cover.jpg') center/cover;display:flex;align-items:center;justify-content:center;text-align:center;flex-direction:column}
+#start .seal{border:1px solid var(--gold);color:var(--gold2);font-size:12px;letter-spacing:4px;padding:6px 16px;border-radius:4px;margin-bottom:24px}
+#start h1{font-size:clamp(54px,10vw,96px);font-weight:500;letter-spacing:.16em;color:var(--gold2);text-shadow:0 4px 30px rgba(0,0,0,.7);line-height:1.05}
+#start .en{font-size:13px;letter-spacing:.5em;color:var(--jade);margin-top:12px}
+#start .desc{margin:30px 0 8px;font-size:16px;line-height:2;color:var(--paper);letter-spacing:.04em}
+#start .desc b{color:var(--gold2);font-weight:500}
+.btn{background:var(--gold);color:var(--ink);border:none;border-radius:8px;padding:14px 40px;font-size:17px;letter-spacing:.15em;cursor:pointer;transition:.18s;font-family:inherit}
+.btn:hover{background:var(--gold2);transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+#start .go{margin-top:26px}
+#start .tip{margin-top:26px;font-size:12px;color:var(--muted);letter-spacing:.08em;line-height:1.9}
+
+/* HUD */
+#hud{font-size:13px}
+.hud-top{position:absolute;top:16px;left:18px;right:18px;display:flex;justify-content:space-between;align-items:flex-start}
+.panel{background:rgba(36,29,21,.82);border:1px solid var(--line);border-radius:10px;padding:12px 16px;backdrop-filter:blur(4px)}
+#quest .lbl,#res .lbl{font-size:11px;color:var(--jade);letter-spacing:2px;margin-bottom:5px}
+#quest .txt{font-size:14px;color:var(--gold2)}
+#res .row{display:flex;gap:18px;font-size:13px}
+#res .row span b{color:var(--gold2);font-size:15px;margin-left:4px}
+#season{position:absolute;top:16px;left:50%;transform:translateX(-50%);text-align:center}
+#season .day{font-size:14px;color:var(--gold2);letter-spacing:2px}
+#season .bar{width:150px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;margin:6px auto 0;overflow:hidden}
+#season .bar i{display:block;height:100%;background:var(--jade);width:0%;transition:width .3s}
+#hint{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:rgba(36,29,21,.8);border:1px solid var(--line);border-radius:20px;padding:9px 22px;font-size:12px;color:var(--paper2);letter-spacing:.05em;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#prompt{position:absolute;bottom:76px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);border-radius:8px;padding:9px 20px;font-size:14px;letter-spacing:.05em;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.72}}
+#toast{position:absolute;top:88px;left:50%;transform:translateX(-50%);background:rgba(36,29,21,.92);border:1px solid var(--gold);border-radius:8px;padding:10px 24px;font-size:14px;color:var(--gold2);opacity:0;transition:opacity .35s;white-space:nowrap}
+#toast.show{opacity:1}
+
+/* 对话 */
+#dialogue{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(20,16,11,.97),rgba(20,16,11,.8));border-top:1px solid var(--line);padding:20px 6% 24px}
+#dialogue .who{color:var(--gold2);font-size:15px;letter-spacing:2px;margin-bottom:8px}
+#dialogue .text{font-size:15px;line-height:1.9;min-height:54px}
+#dialogue .opts{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+#dialogue .opt{border:1px solid var(--line);background:rgba(217,179,106,.08);color:var(--paper);border-radius:6px;padding:8px 16px;font-size:13px;cursor:pointer;transition:.15s}
+#dialogue .opt:hover{background:var(--gold);color:var(--ink)}
+#dialogue .cont{text-align:right;font-size:12px;color:var(--muted);margin-top:10px}
+
+/* 战斗 */
+#battle{background:radial-gradient(ellipse at 50% 45%,transparent 30%,rgba(20,16,11,.5))}
+.b-top{position:absolute;top:22px;left:50%;transform:translateX(-50%);width:min(560px,90vw);text-align:center}
+.b-top .name{color:var(--gold2);font-size:18px;letter-spacing:4px;margin-bottom:8px;text-shadow:0 2px 8px #000}
+.b-top .bar{height:14px;background:rgba(0,0,0,.6);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.b-top .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#c96a52,#e8a15e);transition:width .4s}
+.b-top .num{font-size:12px;color:var(--paper);margin-top:4px}
+.b-log{position:absolute;bottom:132px;left:50%;transform:translateX(-50%);width:min(620px,92vw);text-align:center;font-size:13px;color:var(--gold2);text-shadow:0 2px 6px #000;line-height:1.8}
+.b-bottom{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(20,16,11,.95),transparent);padding:26px 5% 22px;text-align:center}
+.b-status{font-size:12px;color:var(--jade2);margin-bottom:12px}
+.b-cmds{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.b-cmds button{background:rgba(47,38,27,.92);border:1px solid var(--gold);color:var(--gold2);border-radius:8px;padding:11px 26px;font-size:15px;cursor:pointer;letter-spacing:.1em;transition:.15s;font-family:inherit}
+.b-cmds button:hover:not(:disabled){background:var(--gold);color:var(--ink)}
+.b-cmds button:disabled{opacity:.4;cursor:not-allowed}
+.b-cmds button small{display:block;font-size:10px;opacity:.7;letter-spacing:0;margin-top:2px}
+
+/* 结束 */
+#end{background:rgba(20,16,11,.88);display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+#end .big{font-size:clamp(42px,8vw,72px);color:var(--gold2);letter-spacing:.14em;margin-bottom:16px}
+#end .sub{font-size:16px;color:var(--paper);line-height:2;margin-bottom:30px;max-width:560px}
+#end.lose .big{color:var(--danger)}
+
+/* 加载 */
+#load{position:absolute;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:99}
+#load .t{font-size:22px;color:var(--gold2);letter-spacing:.3em}
+#load .s{font-size:12px;color:var(--muted);margin-top:14px;letter-spacing:.1em}
+</style>
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.js"}}
+</script>
+</head>
+<body>
+<div id="game"></div>
+
+<div id="load" class="layer"><div class="t">逐 玉 记</div><div class="s">正在构筑良渚王城…</div></div>
+
+<div id="start" class="layer hidden">
+  <div class="seal">良渚文明 · 3D 交互叙事</div>
+  <h1>逐玉记</h1>
+  <div class="en">J A D E &nbsp; H U N T E R</div>
+  <p class="desc">洪水将临，<b>以玉通神，守此良渚。</b><br>你是良渚之王，在滔天大水到来之前，率领先民完成最后的祭祀。</p>
+  <button class="btn go" id="btnStart">启 行 新 局</button>
+  <div class="tip">WASD 行走 · Shift 疾行 · 空格 跳跃 · 鼠标拖拽环视<br>靠近人物按 E 对话 · 集齐玉石后前往西外环讨伐岩石巨怪</div>
+</div>
+
+<div id="hud" class="layer hidden">
+  <div class="hud-top">
+    <div class="panel" id="quest"><div class="lbl">当前使命</div><div class="txt">寻访长者，了解洪水之事</div></div>
+    <div class="panel" id="res"><div class="lbl">王城物资</div><div class="row"><span>玉<b id="rJade">0</b></span><span>粮<b id="rFood">20</b></span><span>材<b id="rMat">10</b></span><span>人<b id="rPop">12</b></span></div></div>
+  </div>
+  <div id="season" class="panel" style="padding:8px 18px"><div class="day">第 1 日 · 晨</div><div class="bar"><i></i></div></div>
+  <div id="hint">WASD 移动　Shift 疾行　空格 跳跃　E 互动　M 地图　H 隐藏界面</div>
+  <div id="prompt" class="hidden">按 E 互动</div>
+  <div id="toast"></div>
+</div>
+
+<div id="dialogue" class="layer hidden">
+  <div class="who" id="dWho">长者</div>
+  <div class="text" id="dText"></div>
+  <div class="opts" id="dOpts"></div>
+  <div class="cont">按 1-4 选择 · Esc 离开</div>
+</div>
+
+<div id="battle" class="layer hidden">
+  <div class="b-top"><div class="name">岩 石 巨 怪</div><div class="bar"><i id="bBar"></i></div><div class="num" id="bNum">120 / 120</div></div>
+  <div class="b-log" id="bLog">岩石巨怪拦住去路！王啊，请下令。</div>
+  <div class="b-bottom">
+    <div class="b-status" id="bStatus">方士 40/40　武士甲 40/40　武士乙 40/40　·　第 1 回合</div>
+    <div class="b-cmds">
+      <button data-cmd="charge">冲锋<small>高伤 · 反击强</small></button>
+      <button data-cmd="guard">坚守<small>低伤 · 反击弱</small></button>
+      <button data-cmd="rest">蓄势<small>回血 · 不进攻</small></button>
+      <button data-cmd="retreat">撤退<small>保全队伍</small></button>
+    </div>
+  </div>
+</div>
+
+<div id="end" class="layer hidden">
+  <div class="big" id="endTitle">祭祀已成</div>
+  <div class="sub" id="endSub"></div>
+  <button class="btn" id="btnRestart">再 来 一 局</button>
+</div>
+
+<script type="module" src="./game.js"></script>
+</body>
+</html>
